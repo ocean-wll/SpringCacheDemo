@@ -9,6 +9,9 @@ import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.listener.PatternTopic;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
+import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
@@ -75,5 +78,23 @@ public class CacheConfig extends CachingConfigurerSupport {
         redisTemplate.setHashValueSerializer(genericJackson2JsonRedisSerializer);
 
         return redisTemplate;
+    }
+
+    /**
+     * redis 发布订阅容器
+     *
+     * @param connectionFactory redis连接工厂
+     * @param redisSubscriber   消费者
+     * @return RedisMessageListenerContainer对象
+     */
+    @Bean
+    public RedisMessageListenerContainer container(RedisConnectionFactory connectionFactory,
+                                                   MessageListenerAdapter redisSubscriber) {
+        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
+        container.setConnectionFactory(connectionFactory);
+        //配置要订阅的订阅项
+        container.addMessageListener(redisSubscriber, new PatternTopic("ocean_wll"));
+        container.addMessageListener(redisSubscriber, new PatternTopic("ocean"));
+        return container;
     }
 }
